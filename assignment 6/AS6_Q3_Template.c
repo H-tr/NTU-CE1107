@@ -82,11 +82,7 @@ int HashInsert(int key, HashSlot hashTable[])
 {
     // Write your code here
     //index_1 and index_2 are variables to represent the base index and addition index
-    int key_inverse = key;
-    if (key_inverse < 0)
-        key_inverse = -key_inverse;
-
-    int index_1 = hash(key_inverse);
+    int index_1 = hash(key);
     //declare a vriable to store the last slot with "next" and a variable to count
     int last = index_1;
     int cnt = 0;
@@ -98,22 +94,25 @@ int HashInsert(int key, HashSlot hashTable[])
         if (hashTable[index_1].next != -1)
             index_1 = hashTable[index_1].next;
         else 
-            index_1 = (index_1 + 1)%TABLESIZE;
+            break;
                     
         cnt++;
     }
     //motify the "next" of last slot
-    while (hashTable[last].next != -1)
-        last = hashTable[last].next;
-    
-    if (last != index_1)
-        hashTable[last].next = index_1;
+    last = index_1;
+    while (hashTable[index_1].indicator != EMPTY && cnt < TABLESIZE) {
+        index_1 = hash(index_1 + 1);
+        cnt++;
+    }
     //insert the key
-    hashTable[index_1].key = key;
-    hashTable[index_1].indicator = USED;
-    if (cnt == TABLESIZE)
-        return cnt;
-    return index_1;
+    if (cnt != TABLESIZE) {
+        if (last != index_1)
+            hashTable[last].next = index_1;
+        hashTable[index_1].key = key;
+        hashTable[index_1].indicator = USED;
+        return index_1;
+    }
+    return TABLESIZE + 1;
 }
 
 int HashFind(int key, HashSlot hashTable[])
