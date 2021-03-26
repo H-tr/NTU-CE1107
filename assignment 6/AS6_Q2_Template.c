@@ -86,79 +86,72 @@ int hash2(int key)
 int HashInsert(int key, HashSlot hashTable[])
 {
    //Write your code here
-   //whether key is negative
-    int key_inverse = key;
-    while (key_inverse < 0)
-        key_inverse += TABLESIZE;
     //cnt is the variable to count the number of comparation and two indexes are used to present two hash functions
-    int cnt = 0, num;
+    int cnt = 0, num = TABLESIZE;
     int index_1, index_2;
-    int dele;
-    index_1 = hash1(key_inverse);
-    index_2 = hash2(key_inverse);
+    int dele = -1;
+    index_1 = hash1(key);
+    index_2 = hash2(key);
     //find out the slopt which has not been used
-    while (hashTable[index_1].indicator == USED && cnt < TABLESIZE) {
-        //check whether the key has already inside the hash table
-        if (hashTable[index_1].key == key)
-            return -1;
-        index_1 = (index_1 + index_2)%TABLESIZE;
-        ++cnt;
-    }
-    //check the rest hash table
-    num = cnt;
-    int ins = index_1;
-    do {
-        ++num;
-        index_1 = (index_1 + index_2)%TABLESIZE;
-        if (hashTable[index_1].key == key && hashTable[index_1].indicator == USED)
-            return -1;
-        if (hashTable[index_1].key == key && hashTable[index_1].indicator == DELETED) {
-            hashTable[index_1].indicator = USED;
-            return num;
+    while (hashTable[index_1].indicator != EMPTY && cnt < num) {
+        if (hashTable[index_1].indicator == USED) {
+            if (hashTable[index_1].key == key)
+                return -1;
+            ++cnt;
         }
-    } while (hashTable[index_1].indicator != EMPTY && num <= TABLESIZE);
-
-    //if the slot is previously empty or deleted
-    if (cnt != TABLESIZE) {
-        hashTable[ins].key = key;
-        hashTable[ins].indicator = USED;
+        else {
+            if (dele == -1)
+                dele = index_1;
+            --num;
+        } 
+        index_1 = hash1(index_1 + index_2);
     }
     
+    if (dele == -1) {
+        if (cnt == TABLESIZE)
+            return cnt;
+        hashTable[index_1].indicator = USED;
+        hashTable[index_1].key = key;
+    }
+    else {
+        hashTable[dele].indicator = USED;
+        hashTable[dele].key = key;
+    }
     return cnt;
 }
 
 int HashDelete(int key, HashSlot hashTable[])
 {
     //Write your code here
-    //whether key is negative
-    int key_inverse = key;
-    while (key_inverse < 0)
-        key_inverse += TABLESIZE;
     //cnt is the variable to count the number of comparation and two indexes are used to present two hash functions
-    int cnt = 0;
-    int found = 0;
+    int cnt = 0, num = TABLESIZE;
     int index_1, index_2;
-    index_1 = hash1(key_inverse);
-    index_2 = hash2(key_inverse);
-    //find out the key
+    index_1 = hash1(key);
+    index_2 = hash2(key);
+    //if we don't count the deleted in number of comparation
+    /*while (hashTable[index_1].indicator != EMPTY && cnt < num) {
+        if (hashTable[index_1].indicator == USED) {
+            ++cnt;
+            if (hashTable[index_1].key == key) {
+                hashTable[index_1].indicator = DELETED;
+                return cnt;
+            }
+        }
+        else
+            --num;
+        index_1 = hash1(index_1 + index_2);
+    }*/
+
+    //if we consider the deleted in number of comparation
     while (hashTable[index_1].indicator != EMPTY && cnt < TABLESIZE) {
         ++cnt;
-
-        if (hashTable[index_1].key == key)
-            //delete the node
-            if (hashTable[index_1].indicator == USED) {
-                hashTable[index_1].indicator = DELETED;
-                found = 1;
-                break;
-            }
-            //if the key has already been deleted
-            else if (hashTable[index_1].indicator == DELETED)
-                return -1;
-        index_1 = (index_1 + index_2)%TABLESIZE;
+        if (hashTable[index_1].indicator == USED && hashTable[index_1].key == key) {
+            hashTable[index_1].indicator = DELETED;
+            return cnt;
+        }
+        index_1 = hash1(index_1 + index_2);
     }
-    
-    if (!found)
-        return -1;
-    
-    return cnt;
+    //the two cases above do not affect the result.
+
+    return -1;
 }
